@@ -1,36 +1,37 @@
 const API_BASE_URL = '/api/stocks';
 
 // DOM Elements
+const landingSection = document.getElementById('landing-section');
+const analysisSection = document.getElementById('analysis-section');
 const tickerSelect = document.getElementById('ticker-select');
 const loading = document.getElementById('loading');
 const errorMessage = document.getElementById('error-message');
 const results = document.getElementById('results');
+const landingLoading = document.getElementById('landing-loading');
+const landingError = document.getElementById('landing-error');
+const landingCards = document.getElementById('landing-cards');
+const backToLandingBtn = document.getElementById('back-to-landing');
 
 // Store current data for navigation
 let currentAnalysisData = null;
 let currentTicker = null;
+let allTickersData = {};
 
 // Event Listeners
 tickerSelect.addEventListener('change', () => {
     const ticker = tickerSelect.value;
-    // Update URL and analyze
-    const url = new URL(window.location);
-    url.searchParams.set('ticker', ticker);
-    url.searchParams.delete('level'); // Remove level param when changing ticker
-    window.history.pushState({ ticker }, '', url);
-    analyzeStock(ticker);
+    showAnalysisPage(ticker);
 });
 
 // Handle browser back/forward buttons
 window.addEventListener('popstate', (event) => {
     const urlParams = new URLSearchParams(window.location.search);
-    const ticker = urlParams.get('ticker') || 'QQQ';
+    const ticker = urlParams.get('ticker');
     const level = urlParams.get('level');
 
-    // Update ticker selector
-    if (tickerSelect.value !== ticker) {
-        tickerSelect.value = ticker;
-        analyzeStock(ticker);
+    if (!ticker) {
+        // Show landing page
+        showLandingPage();
     } else if (level && currentAnalysisData) {
         // Show detail view for the level
         const levelData = currentAnalysisData.drawdownLevelAnalyses?.find(
@@ -40,26 +41,60 @@ window.addEventListener('popstate', (event) => {
             showDetailView(levelData, ticker, false); // false = don't push state
         }
     } else {
-        // Show main view
-        hideDetailView(false); // false = don't push state
+        // Show analysis page
+        showAnalysisPage(ticker);
     }
+});
+
+// Back to landing button
+backToLandingBtn.addEventListener('click', () => {
+    showLandingPage();
 });
 
 // Load from URL on page load
 window.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
-    const ticker = urlParams.get('ticker') || tickerSelect.value;
+    const ticker = urlParams.get('ticker');
     const level = urlParams.get('level');
+
+    if (ticker) {
+        // Show analysis page for specific ticker
+        showAnalysisPage(ticker, level);
+    } else {
+        // Show landing page
+        loadAllTickers();
+    }
+});
+
+// Show landing page
+function showLandingPage() {
+    landingSection.style.display = 'block';
+    analysisSection.style.display = 'none';
+
+    // Clear URL params
+    window.history.pushState({}, '', '/');
+
+    // Reload all tickers if not already loaded
+    if (Object.keys(allTickersData).length === 0) {
+        loadAllTickers();
+    }
+}
+
+// Show analysis page
+function showAnalysisPage(ticker, level) {
+    landingSection.style.display = 'none';
+    analysisSection.style.display = 'block';
 
     // Set ticker selector
     tickerSelect.value = ticker;
 
-    // Set initial URL if not present
-    if (!urlParams.get('ticker')) {
-        const url = new URL(window.location);
-        url.searchParams.set('ticker', ticker);
-        window.history.replaceState({ ticker }, '', url);
+    // Update URL
+    const url = new URL(window.location);
+    url.searchParams.set('ticker', ticker);
+    if (level) {
+        url.searchParams.set('level', level);
     }
+    window.history.replaceState({ ticker, level }, '', url);
 
     // Analyze stock
     analyzeStock(ticker).then(() => {
@@ -70,12 +105,120 @@ window.addEventListener('DOMContentLoaded', () => {
             );
             if (levelData) {
                 setTimeout(() => {
-                    showDetailView(levelData, ticker, false); // false = don't modify history
+                    showDetailView(levelData, ticker, false);
                 }, 100);
             }
         }
     });
-});
+}
+
+// Load all tickers for landing page
+async function loadAllTickers() {
+    const tickers = ['QQQ', 'VOO', 'SOXX'];
+    landingLoading.style.display = 'block';
+    landingError.style.display = 'none';
+    landingCards.innerHTML = '';
+
+    try {
+        const promises = tickers.map(ticker =>
+            fetch(`${API_BASE_URL}/${ticker}/analysis?years=10`)
+                .then(res => res.json())
+                .then(data => ({ ticker, data }))
+        );
+
+        const results = await Promise.all(promises);
+
+        results.forEach(({ ticker, data }) => {
+            allTickersData[ticker] = data;
+        });
+
+        displayLandingCards(results);
+        landingLoading.style.display = 'none';
+    } catch (error) {
+        landingError.textContent = '데이터를 불러오는데 실패했습니다.';
+        landingError.style.display = 'block';
+        landingLoading.style.display = 'none';
+    }
+}
+
+// Display landing cards
+function displayLandingCards(tickersData) {
+    const tickerNames = {
+        'QQQ': 'Nasdaq-100',
+        'VOO': 'S&P 500',
+        'SOXX': '반도체 인덱스'
+    };
+
+    landingCards.innerHTML = tickersData.map(({ ticker, data }) => {
+        const drawdown = data.currentDrawdown;
+        const drawdownClass = drawdown.drawdownPercent >= 0 ? 'positive' : 'negative';
+
+        // Generate summary text
+        const summaryText = generateSummaryText(ticker, data);
+
+        return `
+            <div class="landing-card" onclick="navigateToAnalysis('${ticker}')">
+                <div class="landing-card-header">
+                    <div>
+                        <div class="landing-card-ticker">${ticker}</div>
+                        <div class="landing-card-name">${tickerNames[ticker]}</div>
+                    </div>
+                </div>
+
+                <div class="landing-card-body">
+                    <div class="landing-stat">
+                        <span class="landing-stat-label">현재가</span>
+                        <span class="landing-stat-value">$${formatNumber(drawdown.currentPrice)}</span>
+                    </div>
+                    <div class="landing-stat">
+                        <span class="landing-stat-label">고점가</span>
+                        <span class="landing-stat-value">$${formatNumber(drawdown.peakPrice)}</span>
+                    </div>
+                    <div class="landing-stat">
+                        <span class="landing-stat-label">고점 대비 하락률</span>
+                        <span class="landing-stat-value landing-drawdown ${drawdownClass}">
+                            ${formatPercent(drawdown.drawdownPercent)}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="landing-summary">
+                    <div class="landing-summary-text">${summaryText}</div>
+                </div>
+
+                <div class="landing-card-footer">
+                    <button class="detail-button" onclick="event.stopPropagation(); navigateToAnalysis('${ticker}')">
+                        자세히 분석하기 →
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Generate summary text
+function generateSummaryText(ticker, data) {
+    const drawdown = data.currentDrawdown;
+    const drawdownPercent = drawdown.drawdownPercent;
+    const historicals = data.historicalDrawdowns || [];
+
+    if (drawdownPercent >= -5) {
+        return `현재 고점 근처에 있습니다. 과거 데이터를 확인하여 추가 하락 가능성을 체크해보세요.`;
+    } else if (drawdownPercent >= -15) {
+        const avgCases = historicals.length;
+        return `현재 ${Math.abs(drawdownPercent).toFixed(1)}% 하락한 상태입니다. 과거 유사한 ${avgCases}건의 사례를 참고해 투자 타이밍을 판단해보세요.`;
+    } else if (drawdownPercent >= -30) {
+        const avgCases = historicals.length;
+        return `상당한 조정을 받은 상태입니다. 과거 ${avgCases}건의 유사 사례에서 평균적으로 양호한 수익률을 보였습니다.`;
+    } else {
+        return `큰 폭으로 하락한 상태입니다. 과거 데이터를 보면 장기적으로 좋은 매수 기회였던 경우가 많습니다.`;
+    }
+}
+
+// Navigate to analysis page
+function navigateToAnalysis(ticker) {
+    showAnalysisPage(ticker);
+}
 
 // Show/Hide UI elements
 function showLoading() {
@@ -1050,7 +1193,4 @@ function createHistoricalDrawdownChart(chartId, historicalDrawdown) {
     });
 }
 
-// Load default stock on page load
-window.addEventListener('load', () => {
-    analyzeStock(tickerSelect.value);
-});
+// Removed - handled in DOMContentLoaded

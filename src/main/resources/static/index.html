@@ -9,33 +9,62 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <div style="text-align: right; margin-bottom: 10px;">
-                <a href="/guide.html" class="guide-link">📖 사용 가이드</a>
-            </div>
-            <h1>투자 타이밍 가이드</h1>
-            <p class="subtitle">주요 ETF의 하락률과 과거 수익률을 분석하여 투자 시점을 가이드합니다</p>
-        </header>
+        <!-- Landing Section -->
+        <div id="landing-section">
+            <header>
+                <div style="text-align: right; margin-bottom: 10px;">
+                    <a href="/guide.html" class="guide-link">📖 사용 가이드</a>
+                </div>
+                <h1>투자 타이밍 가이드</h1>
+                <p class="subtitle">주요 ETF의 하락률과 과거 수익률을 분석하여 투자 시점을 가이드합니다</p>
+            </header>
 
-        <div class="controls">
-            <div class="ticker-selector">
-                <label for="ticker-select">ETF 선택:</label>
-                <select id="ticker-select">
-                    <option value="QQQ">QQQ (Nasdaq-100)</option>
-                    <option value="VOO">VOO (S&P 500)</option>
-                    <option value="SOXX">SOXX (반도체 인덱스)</option>
-                </select>
+            <div class="landing-question">
+                <h2>지금이 투자하기 좋은 시점일까요?</h2>
+                <p>현재 주요 ETF들의 고점 대비 하락률을 확인하고, 과거 데이터를 기반으로 투자 타이밍을 분석해보세요.</p>
             </div>
+
+            <div id="landing-loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>데이터를 불러오는 중입니다...</p>
+            </div>
+
+            <div id="landing-error" class="error-message" style="display: none;"></div>
+
+            <div id="landing-cards" class="landing-cards"></div>
         </div>
 
-        <div id="loading" class="loading" style="display: none;">
-            <div class="spinner"></div>
-            <p>데이터를 분석중입니다...</p>
+        <!-- Analysis Section (기존 메인 페이지) -->
+        <div id="analysis-section" style="display: none;">
+            <header>
+                <div style="text-align: right; margin-bottom: 10px;">
+                    <a href="/guide.html" class="guide-link">📖 사용 가이드</a>
+                </div>
+                <h1>투자 타이밍 가이드</h1>
+                <p class="subtitle">주요 ETF의 하락률과 과거 수익률을 분석하여 투자 시점을 가이드합니다</p>
+            </header>
+
+            <div class="controls">
+                <button id="back-to-landing" class="back-button">← 전체 현황으로 돌아가기</button>
+                <div class="ticker-selector">
+                    <label for="ticker-select">ETF 선택:</label>
+                    <select id="ticker-select">
+                        <option value="QQQ">QQQ (Nasdaq-100)</option>
+                        <option value="VOO">VOO (S&P 500)</option>
+                        <option value="SOXX">SOXX (반도체 인덱스)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>데이터를 분석중입니다...</p>
+            </div>
+
+            <div id="error-message" class="error-message" style="display: none;"></div>
+
+            <div id="results" class="results"></div>
         </div>
-
-        <div id="error-message" class="error-message" style="display: none;"></div>
-
-        <div id="results" class="results"></div>
     </div>
 
     <script src="/js/app.js"></script>

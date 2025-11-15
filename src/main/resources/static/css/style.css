@@ -281,6 +281,167 @@ h1 {
     border: 1px solid #e9ecef;
 }
 
+/* Landing Page Styles */
+.landing-question {
+    text-align: center;
+    margin: 40px 0;
+    padding: 32px 24px;
+    background: linear-gradient(135deg, #f6f9fc 0%, #edf2f7 100%);
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.landing-question h2 {
+    color: #2c5282;
+    font-size: 1.75rem;
+    margin-bottom: 12px;
+    font-weight: 700;
+}
+
+.landing-question p {
+    color: #4a5568;
+    font-size: 1.05rem;
+    line-height: 1.6;
+}
+
+.landing-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+    margin-top: 40px;
+}
+
+.landing-card {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 24px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.landing-card:hover {
+    border-color: #2c5282;
+    box-shadow: 0 4px 12px rgba(44, 82, 130, 0.15);
+    transform: translateY(-2px);
+}
+
+.landing-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.landing-card-ticker {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.landing-card-name {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-top: 4px;
+}
+
+.landing-card-body {
+    margin-bottom: 20px;
+}
+
+.landing-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+.landing-stat:last-child {
+    border-bottom: none;
+}
+
+.landing-stat-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.landing-stat-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.landing-drawdown {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.landing-drawdown.negative {
+    color: #dc3545;
+}
+
+.landing-drawdown.positive {
+    color: #198754;
+}
+
+.landing-summary {
+    background: #f8f9fa;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.landing-summary-text {
+    font-size: 0.95rem;
+    color: #495057;
+    line-height: 1.6;
+}
+
+.landing-card-footer {
+    display: flex;
+    justify-content: center;
+}
+
+.detail-button {
+    width: 100%;
+    padding: 12px 24px;
+    background: #2c5282;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.detail-button:hover {
+    background: #1e3a5f;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(44, 82, 130, 0.3);
+}
+
+.back-button {
+    padding: 10px 20px;
+    background: transparent;
+    color: #2c5282;
+    border: 1px solid #2c5282;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 20px;
+}
+
+.back-button:hover {
+    background: #2c5282;
+    color: white;
+}
+
 @media (max-width: 768px) {
     body {
         padding: 10px;
@@ -581,6 +742,75 @@ h1 {
         width: 32px;
         height: 32px;
         margin: 0 auto 16px;
+    }
+
+    /* Landing page mobile styles */
+    .landing-question {
+        margin: 24px 0;
+        padding: 20px 16px;
+    }
+
+    .landing-question h2 {
+        font-size: 1.3rem;
+        margin-bottom: 10px;
+    }
+
+    .landing-question p {
+        font-size: 0.95rem;
+    }
+
+    .landing-cards {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-top: 24px;
+    }
+
+    .landing-card {
+        padding: 18px;
+    }
+
+    .landing-card-ticker {
+        font-size: 1.3rem;
+    }
+
+    .landing-card-name {
+        font-size: 0.85rem;
+    }
+
+    .landing-stat {
+        padding: 10px 0;
+    }
+
+    .landing-stat-label {
+        font-size: 0.85rem;
+    }
+
+    .landing-stat-value {
+        font-size: 1rem;
+    }
+
+    .landing-drawdown {
+        font-size: 1.3rem;
+    }
+
+    .landing-summary {
+        padding: 14px;
+        margin-bottom: 16px;
+    }
+
+    .landing-summary-text {
+        font-size: 0.9rem;
+    }
+
+    .detail-button {
+        padding: 12px 20px;
+        font-size: 0.95rem;
+    }
+
+    .back-button {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        width: 100%;
     }
 }
 
