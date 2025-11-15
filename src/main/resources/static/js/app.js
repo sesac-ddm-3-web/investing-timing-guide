@@ -154,6 +154,10 @@ function createStockCard(ticker, data) {
 
     const drawdownClass = drawdown.drawdownPercent >= 0 ? 'positive' : 'negative';
 
+    // Detect mobile for chart height
+    const isMobile = window.innerWidth <= 768;
+    const priceChartHeight = isMobile ? 300 : 200;
+
     card.innerHTML = `
         <div class="stock-header">
             <h2 class="stock-title">${ticker}</h2>
@@ -163,7 +167,7 @@ function createStockCard(ticker, data) {
             <h3>현재 상태</h3>
             ${chartData ? `
                 <div class="chart-container">
-                    <canvas id="chart-${ticker}" width="400" height="200"></canvas>
+                    <canvas id="chart-${ticker}" width="400" height="${priceChartHeight}"></canvas>
                 </div>
             ` : ''}
             <div class="info-grid">
@@ -218,6 +222,10 @@ function createHistoricalSection(historicals, currentDrawdown, ticker) {
         `;
     }
 
+    // Detect mobile
+    const isMobile = window.innerWidth <= 768;
+    const chartHeight = isMobile ? 250 : 150;
+
     const historicalItems = historicals.map((hist, index) => {
         const chartId = `hist-chart-${ticker}-${index}`;
         return `
@@ -233,7 +241,7 @@ function createHistoricalSection(historicals, currentDrawdown, ticker) {
                 </div>
                 ${hist.chartData ? `
                     <div class="chart-container">
-                        <canvas id="${chartId}" width="400" height="150"></canvas>
+                        <canvas id="${chartId}" width="400" height="${chartHeight}"></canvas>
                     </div>
                 ` : ''}
                 <div>
@@ -405,6 +413,10 @@ function showDetailView(level, ticker, pushState = true) {
         existingDetail.remove();
     }
 
+    // Detect mobile for chart height
+    const isMobile = window.innerWidth <= 768;
+    const detailChartHeight = isMobile ? 500 : 400;
+
     // Create detail view
     const detailView = document.createElement('div');
     detailView.className = 'detail-view show';
@@ -425,7 +437,7 @@ function showDetailView(level, ticker, pushState = true) {
 
                 ${histCase.chartData ? `
                     <div class="detail-chart-container">
-                        <canvas id="${chartId}" width="800" height="400"></canvas>
+                        <canvas id="${chartId}" width="800" height="${detailChartHeight}"></canvas>
                     </div>
                 ` : ''}
 

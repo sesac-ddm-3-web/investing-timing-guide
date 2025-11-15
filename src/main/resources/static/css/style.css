@@ -282,22 +282,305 @@ h1 {
 }
 
 @media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
     .container {
-        padding: 20px;
+        padding: 16px;
+        border-radius: 8px;
+    }
+
+    header {
+        margin-bottom: 24px;
+        padding-bottom: 16px;
     }
 
     h1 {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
+        margin-bottom: 8px;
+    }
+
+    .subtitle {
+        font-size: 0.9rem;
+    }
+
+    .guide-link {
+        font-size: 0.85rem;
+        padding: 6px 12px;
+    }
+
+    .controls {
+        margin-bottom: 24px;
     }
 
     .ticker-selector {
         flex-direction: column;
         align-items: stretch;
         width: 100%;
+        gap: 8px;
+    }
+
+    .ticker-selector label {
+        font-size: 0.9rem;
     }
 
     .ticker-selector select {
         width: 100%;
+        padding: 12px;
+        font-size: 1rem;
+    }
+
+    /* Cards and sections */
+    .stock-card {
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    .stock-header {
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+    }
+
+    .stock-title {
+        font-size: 1.4rem;
+    }
+
+    .drawdown-info {
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    .drawdown-info h3 {
+        font-size: 1rem;
+        margin-bottom: 12px;
+    }
+
+    /* Info grid - 모바일에서 2열로 */
+    .info-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .info-label {
+        font-size: 0.8rem;
+    }
+
+    .info-value {
+        font-size: 1.1rem;
+    }
+
+    .drawdown-percent {
+        font-size: 1.5rem;
+    }
+
+    /* Chart containers */
+    .chart-container {
+        margin: 12px 0;
+        padding: 12px;
+        overflow-x: auto;
+    }
+
+    .chart-container canvas {
+        min-width: 300px;
+        max-width: 100%;
+    }
+
+    /* Historical section */
+    .historical-section {
+        margin-top: 16px;
+    }
+
+    .historical-section h3 {
+        font-size: 1rem;
+        margin-bottom: 12px;
+    }
+
+    .historical-section p {
+        font-size: 0.85rem;
+        margin-bottom: 12px;
+    }
+
+    .historical-list {
+        gap: 12px;
+    }
+
+    .historical-item {
+        padding: 14px;
+    }
+
+    .historical-header {
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+    }
+
+    .historical-date {
+        font-size: 0.85rem;
+    }
+
+    /* Recovery grid - 모바일에서 2열로 */
+    .recovery-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        margin-top: 8px;
+    }
+
+    .recovery-item {
+        padding: 8px;
+    }
+
+    .recovery-months {
+        font-size: 0.8rem;
+        margin-bottom: 4px;
+    }
+
+    .recovery-return {
+        font-size: 1rem;
+    }
+
+    /* Drawdown levels section */
+    .drawdown-levels-section {
+        padding: 16px;
+        margin-top: 20px;
+    }
+
+    .drawdown-levels-section h3 {
+        font-size: 1rem;
+        margin-bottom: 8px;
+    }
+
+    .drawdown-levels-section p {
+        font-size: 0.85rem;
+        margin-bottom: 16px;
+    }
+
+    /* Levels grid - 모바일에서 1열로 */
+    .levels-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-top: 16px;
+    }
+
+    .level-item {
+        padding: 14px;
+    }
+
+    .level-header h4 {
+        font-size: 0.95rem;
+    }
+
+    .case-count {
+        font-size: 0.75rem;
+        padding: 3px 8px;
+    }
+
+    .level-stats p {
+        font-size: 0.8rem;
+        margin-bottom: 8px;
+    }
+
+    .loss-count {
+        font-size: 0.75rem;
+        margin-top: 3px;
+    }
+
+    /* Detail view */
+    .detail-header {
+        flex-direction: column;
+        align-items: flex-start;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        gap: 12px;
+    }
+
+    .detail-title {
+        font-size: 1.2rem;
+        word-break: keep-all;
+    }
+
+    .back-button {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        width: 100%;
+        text-align: center;
+    }
+
+    .detail-cases {
+        gap: 16px;
+    }
+
+    .detail-case-item {
+        padding: 16px;
+    }
+
+    .detail-case-header {
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+    }
+
+    .detail-case-date {
+        font-size: 0.9rem;
+        word-break: keep-all;
+    }
+
+    .detail-case-drawdown {
+        font-size: 0.85rem;
+    }
+
+    .detail-chart-container {
+        margin: 12px 0;
+        padding: 12px;
+        overflow-x: auto;
+    }
+
+    .detail-chart-container canvas {
+        min-width: 300px;
+        max-width: 100%;
+    }
+
+    .detail-recovery-section {
+        margin-top: 12px;
+    }
+
+    .detail-recovery-title {
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+    }
+
+    /* Data period info */
+    .data-period-info {
+        padding: 10px 16px;
+        margin-bottom: 16px;
+        font-size: 0.85rem;
+    }
+
+    .period-label {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    /* No data message */
+    .no-data {
+        padding: 24px;
+        font-size: 0.9rem;
+    }
+
+    /* Error message */
+    .error-message {
+        padding: 12px 14px;
+        font-size: 0.9rem;
+        margin-bottom: 16px;
+    }
+
+    /* Loading */
+    .loading {
+        padding: 30px;
+    }
+
+    .spinner {
+        width: 32px;
+        height: 32px;
+        margin: 0 auto 16px;
     }
 }
 
