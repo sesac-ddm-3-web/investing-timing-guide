@@ -1,0 +1,645 @@
+const API_BASE_URL = '/api/stocks';
+
+// DOM Elements
+const tickerSelect = document.getElementById('ticker-select');
+const analyzeBtn = document.getElementById('analyze-btn');
+const refreshBtn = document.getElementById('refresh-btn');
+const analyzeAllBtn = document.getElementById('analyze-all-btn');
+const loading = document.getElementById('loading');
+const errorMessage = document.getElementById('error-message');
+const results = document.getElementById('results');
+
+// Event Listeners
+tickerSelect.addEventListener('change', () => {
+    const ticker = tickerSelect.value;
+    analyzeStock(ticker);
+});
+
+analyzeBtn.addEventListener('click', () => {
+    const ticker = tickerSelect.value;
+    analyzeStock(ticker);
+});
+
+refreshBtn.addEventListener('click', () => {
+    const ticker = tickerSelect.value;
+    refreshStockData(ticker);
+});
+
+analyzeAllBtn.addEventListener('click', () => {
+    analyzeAllStocks();
+});
+
+// Show/Hide UI elements
+function showLoading() {
+    loading.style.display = 'block';
+    errorMessage.style.display = 'none';
+    results.innerHTML = '';
+}
+
+function hideLoading() {
+    loading.style.display = 'none';
+}
+
+function showError(message) {
+    errorMessage.textContent = message;
+    errorMessage.style.display = 'block';
+    hideLoading();
+}
+
+// API Calls
+async function analyzeStock(ticker) {
+    showLoading();
+    try {
+        const response = await fetch(`${API_BASE_URL}/${ticker}/analysis?years=10`);
+        if (!response.ok) {
+            throw new Error('데이터를 가져오는데 실패했습니다');
+        }
+        const data = await response.json();
+        hideLoading();
+        displayStockAnalysis(ticker, data);
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+async function refreshStockData(ticker) {
+    showLoading();
+    try {
+        const response = await fetch(`${API_BASE_URL}/${ticker}/refresh?years=10`, {
+            method: 'POST'
+        });
+        if (!response.ok) {
+            throw new Error('데이터 새로고침에 실패했습니다');
+        }
+        hideLoading();
+        // After refresh, analyze the stock
+        analyzeStock(ticker);
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+async function analyzeAllStocks() {
+    showLoading();
+    try {
+        const response = await fetch(`${API_BASE_URL}/analysis/all?years=10`);
+        if (!response.ok) {
+            throw new Error('데이터를 가져오는데 실패했습니다');
+        }
+        const data = await response.json();
+        hideLoading();
+        displayAllAnalysis(data);
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+// Display Functions
+function displayStockAnalysis(ticker, data) {
+    results.innerHTML = '';
+
+    if (!data.currentDrawdown) {
+        results.innerHTML = '<div class="no-data">데이터를 찾을 수 없습니다</div>';
+        return;
+    }
+
+    // Display data period info
+    if (data.dataStartDate && data.dataEndDate) {
+        const periodInfo = document.createElement('div');
+        periodInfo.className = 'data-period-info';
+        periodInfo.innerHTML = `
+            <span class="period-label">분석 데이터 기간:</span>
+            <span class="period-dates">${data.dataStartDate} ~ ${data.dataEndDate}</span>
+        `;
+        results.appendChild(periodInfo);
+    }
+
+    const card = createStockCard(ticker, data);
+    results.appendChild(card);
+}
+
+function displayAllAnalysis(allData) {
+    results.innerHTML = '';
+
+    Object.keys(allData).forEach(ticker => {
+        const data = allData[ticker];
+        if (data.currentDrawdown) {
+            const card = createStockCard(ticker, data);
+            results.appendChild(card);
+        }
+    });
+}
+
+function createStockCard(ticker, data) {
+    const card = document.createElement('div');
+    card.className = 'stock-card';
+
+    const drawdown = data.currentDrawdown;
+    const historicals = data.historicalDrawdowns || [];
+    const drawdownLevels = data.drawdownLevelAnalyses || [];
+    const chartData = data.oneYearChartData;
+
+    const drawdownClass = drawdown.drawdownPercent >= 0 ? 'positive' : 'negative';
+
+    card.innerHTML = `
+        <div class="stock-header">
+            <h2 class="stock-title">${ticker}</h2>
+        </div>
+
+        <div class="drawdown-info">
+            <h3>현재 상태</h3>
+            ${chartData ? `
+                <div class="chart-container">
+                    <canvas id="chart-${ticker}" width="400" height="200"></canvas>
+                </div>
+            ` : ''}
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">현재가</span>
+                    <span class="info-value">$${formatNumber(drawdown.currentPrice)}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">최고가</span>
+                    <span class="info-value">$${formatNumber(drawdown.peakPrice)}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">최고가 도달일</span>
+                    <span class="info-value">${drawdown.peakDate}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">고점 대비 하락률</span>
+                    <span class="info-value drawdown-percent ${drawdownClass}">
+                        ${formatPercent(drawdown.drawdownPercent)}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">고점 이후 경과일</span>
+                    <span class="info-value">${drawdown.daysSincePeak}일</span>
+                </div>
+            </div>
+        </div>
+
+        ${createHistoricalSection(historicals, drawdown.drawdownPercent, ticker)}
+        ${createDrawdownLevelsSection(drawdownLevels)}
+    `;
+
+    // Draw chart after card is added to DOM
+    if (chartData) {
+        setTimeout(() => {
+            createPriceChart(ticker, chartData, drawdown);
+        }, 100);
+    }
+
+    return card;
+}
+
+function createHistoricalSection(historicals, currentDrawdown, ticker) {
+    if (!historicals || historicals.length === 0) {
+        return `
+            <div class="historical-section">
+                <h3>과거 유사 하락 사례</h3>
+                <div class="no-data">
+                    현재 하락률(${formatPercent(currentDrawdown)})과 유사한 과거 사례를 찾을 수 없습니다.
+                </div>
+            </div>
+        `;
+    }
+
+    const historicalItems = historicals.map((hist, index) => {
+        const chartId = `hist-chart-${ticker}-${index}`;
+        return `
+            <div class="historical-item">
+                <div class="historical-header">
+                    <div class="historical-date">
+                        <strong>하락 시작:</strong> ${hist.startDate} →
+                        <strong>저점:</strong> ${hist.bottomDate}
+                    </div>
+                    <div class="info-value ${hist.drawdownPercent >= 0 ? 'positive' : 'negative'}">
+                        하락률: ${formatPercent(hist.drawdownPercent)}
+                    </div>
+                </div>
+                ${hist.chartData ? `
+                    <div class="chart-container">
+                        <canvas id="${chartId}" width="400" height="150"></canvas>
+                    </div>
+                ` : ''}
+                <div>
+                    <strong>해당 저점에서 투자 시 수익률:</strong>
+                    <div class="recovery-grid">
+                        ${hist.recoveryPeriods.map(period => `
+                            <div class="recovery-item">
+                                <div class="recovery-months">${period.months}개월 후</div>
+                                <div class="recovery-return ${period.returnPercent >= 0 ? 'positive' : 'negative'}">
+                                    ${formatPercent(period.returnPercent)}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Draw charts after rendering
+    setTimeout(() => {
+        historicals.forEach((hist, index) => {
+            if (hist.chartData) {
+                const chartId = `hist-chart-${ticker}-${index}`;
+                createHistoricalDrawdownChart(chartId, hist);
+            }
+        });
+    }, 100);
+
+    return `
+        <div class="historical-section">
+            <h3>과거 유사 하락 사례 (±2% 범위)</h3>
+            <p style="color: #718096; margin-bottom: 15px;">
+                현재와 비슷한 하락률을 보였던 ${historicals.length}건의 과거 사례를 분석했습니다.
+                각 차트는 고점 3개월 전부터 저점 12개월 후까지의 가격 변화를 보여줍니다.
+            </p>
+            <div class="historical-list">
+                ${historicalItems}
+            </div>
+        </div>
+    `;
+}
+
+function createDrawdownLevelsSection(drawdownLevels) {
+    if (!drawdownLevels || drawdownLevels.length === 0) {
+        return '';
+    }
+
+    const levelItems = drawdownLevels.map(level => {
+        if (!level.averageStats || level.totalCases === 0) {
+            return `
+                <div class="level-item">
+                    <div class="level-header">
+                        <h4>${level.drawdownLevel}% 하락 시</h4>
+                        <span class="case-count">과거 사례: 0건</span>
+                    </div>
+                    <div class="no-data">과거 데이터 없음</div>
+                </div>
+            `;
+        }
+
+        const stats = level.averageStats;
+        return `
+            <div class="level-item">
+                <div class="level-header">
+                    <h4>${level.drawdownLevel}% 하락 시</h4>
+                    <span class="case-count">과거 사례: ${level.totalCases}건</span>
+                </div>
+                <div class="level-stats">
+                    <p style="color: #718096; margin-bottom: 10px; font-size: 14px;">
+                        해당 하락률에서 투자 시 평균 수익률
+                    </p>
+                    <div class="recovery-grid">
+                        <div class="recovery-item">
+                            <div class="recovery-months">1개월 후</div>
+                            <div class="recovery-return ${stats.month1Avg >= 0 ? 'positive' : 'negative'}">
+                                ${formatPercent(stats.month1Avg)}
+                            </div>
+                            <div class="loss-count">손실: ${stats.month1LossCount}/${level.totalCases}건</div>
+                        </div>
+                        <div class="recovery-item">
+                            <div class="recovery-months">3개월 후</div>
+                            <div class="recovery-return ${stats.month3Avg >= 0 ? 'positive' : 'negative'}">
+                                ${formatPercent(stats.month3Avg)}
+                            </div>
+                            <div class="loss-count">손실: ${stats.month3LossCount}/${level.totalCases}건</div>
+                        </div>
+                        <div class="recovery-item">
+                            <div class="recovery-months">6개월 후</div>
+                            <div class="recovery-return ${stats.month6Avg >= 0 ? 'positive' : 'negative'}">
+                                ${formatPercent(stats.month6Avg)}
+                            </div>
+                            <div class="loss-count">손실: ${stats.month6LossCount}/${level.totalCases}건</div>
+                        </div>
+                        <div class="recovery-item">
+                            <div class="recovery-months">12개월 후</div>
+                            <div class="recovery-return ${stats.month12Avg >= 0 ? 'positive' : 'negative'}">
+                                ${formatPercent(stats.month12Avg)}
+                            </div>
+                            <div class="loss-count">손실: ${stats.month12LossCount}/${level.totalCases}건</div>
+                        </div>
+                        <div class="recovery-item">
+                            <div class="recovery-months">24개월 후</div>
+                            <div class="recovery-return ${stats.month24Avg >= 0 ? 'positive' : 'negative'}">
+                                ${formatPercent(stats.month24Avg)}
+                            </div>
+                            <div class="loss-count">손실: ${stats.month24LossCount}/${level.totalCases}건</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    return `
+        <div class="drawdown-levels-section">
+            <h3>시나리오별 분석 - 고정 하락률 기준</h3>
+            <p style="color: #718096; margin-bottom: 20px;">
+                만약 고점 대비 특정 하락률을 기록한다면? 과거 동일한 하락률에서의 평균 수익률을 확인하세요.
+            </p>
+            <div class="levels-grid">
+                ${levelItems}
+            </div>
+        </div>
+    `;
+}
+
+// Utility Functions
+function formatNumber(num) {
+    if (num === null || num === undefined) return 'N/A';
+    return Number(num).toFixed(2);
+}
+
+function formatPercent(num) {
+    if (num === null || num === undefined) return 'N/A';
+    const value = Number(num);
+    const sign = value >= 0 ? '+' : '';
+    return `${sign}${value.toFixed(2)}%`;
+}
+
+// Chart Functions
+function createPriceChart(ticker, chartData, drawdown) {
+    const canvas = document.getElementById(`chart-${ticker}`);
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+
+    // Prepare data
+    const labels = chartData.labels;
+    const prices = chartData.prices.map(p => parseFloat(p));
+    const peakPrice = parseFloat(chartData.peakPrice);
+    const currentPrice = parseFloat(drawdown.currentPrice);
+
+    // Create peak line data (horizontal line)
+    const peakLineData = labels.map(() => peakPrice);
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Price',
+                    data: prices,
+                    borderColor: '#4299e1',
+                    backgroundColor: 'rgba(66, 153, 225, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.1,
+                    pointRadius: 0,
+                    pointHoverRadius: 4
+                },
+                {
+                    label: `Peak ($${peakPrice.toFixed(2)})`,
+                    data: peakLineData,
+                    borderColor: '#48bb78',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    fill: false,
+                    pointRadius: 0,
+                    pointHoverRadius: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        color: '#2d3748',
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    displayColors: true,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += '$' + context.parsed.y.toFixed(2);
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#718096',
+                        maxTicksLimit: 8,
+                        font: {
+                            size: 10
+                        }
+                    }
+                },
+                y: {
+                    display: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    ticks: {
+                        color: '#718096',
+                        callback: function(value) {
+                            return '$' + value.toFixed(0);
+                        },
+                        font: {
+                            size: 11
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function createHistoricalDrawdownChart(chartId, historicalDrawdown) {
+    const canvas = document.getElementById(chartId);
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const chartData = historicalDrawdown.chartData;
+
+    // Prepare data
+    const labels = chartData.labels;
+    const prices = chartData.prices.map(p => parseFloat(p));
+    const peakPrice = parseFloat(chartData.peakPrice);
+
+    // Create peak line data (horizontal line)
+    const peakLineData = labels.map(() => peakPrice);
+
+    // Find peak and bottom dates for annotations
+    const peakDate = chartData.peakDate;
+    const bottomDate = historicalDrawdown.bottomDate;
+
+    // Find indices for peak and bottom
+    const peakIndex = labels.indexOf(peakDate);
+    const bottomIndex = labels.indexOf(bottomDate);
+
+    // Create scatter data for peak and bottom points
+    const peakPointData = labels.map((label, index) => {
+        if (index === peakIndex) {
+            return prices[index];
+        }
+        return null;
+    });
+
+    const bottomPointData = labels.map((label, index) => {
+        if (index === bottomIndex) {
+            return prices[index];
+        }
+        return null;
+    });
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '가격',
+                    data: prices,
+                    borderColor: '#ed8936',
+                    backgroundColor: 'rgba(237, 137, 54, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.1,
+                    pointRadius: 0,
+                    pointHoverRadius: 4
+                },
+                {
+                    label: `고점 ($${peakPrice.toFixed(2)})`,
+                    data: peakLineData,
+                    borderColor: '#48bb78',
+                    borderWidth: 1,
+                    borderDash: [3, 3],
+                    fill: false,
+                    pointRadius: 0,
+                    pointHoverRadius: 0
+                },
+                {
+                    label: '고점 시점',
+                    data: peakPointData,
+                    type: 'scatter',
+                    backgroundColor: '#48bb78',
+                    borderColor: '#48bb78',
+                    borderWidth: 2,
+                    pointRadius: 8,
+                    pointHoverRadius: 10,
+                    showLine: false
+                },
+                {
+                    label: '저점 시점',
+                    data: bottomPointData,
+                    type: 'scatter',
+                    backgroundColor: '#f56565',
+                    borderColor: '#f56565',
+                    borderWidth: 2,
+                    pointRadius: 8,
+                    pointHoverRadius: 10,
+                    showLine: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        color: '#2d3748',
+                        font: {
+                            size: 10
+                        },
+                        usePointStyle: true,
+                        padding: 8
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 8,
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    displayColors: true,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += '$' + context.parsed.y.toFixed(2);
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#718096',
+                        maxTicksLimit: 6,
+                        font: {
+                            size: 9
+                        }
+                    }
+                },
+                y: {
+                    display: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    ticks: {
+                        color: '#718096',
+                        callback: function(value) {
+                            return '$' + value.toFixed(0);
+                        },
+                        font: {
+                            size: 10
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Load default stock on page load
+window.addEventListener('load', () => {
+    analyzeStock(tickerSelect.value);
+});
