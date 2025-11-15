@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>투자 타이밍 가이드 - 사용 가이드</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .guide-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .guide-header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding-bottom: 30px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .guide-header h1 {
+            font-size: 2.5rem;
+            color: #1a1a1a;
+            margin-bottom: 15px;
+        }
+
+        .guide-header .subtitle {
+            font-size: 1.1rem;
+            color: #718096;
+            line-height: 1.6;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #2c5282;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        .section h2 {
+            font-size: 1.8rem;
+            color: #1a1a1a;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .section h3 {
+            font-size: 1.3rem;
+            color: #2c5282;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        .section p {
+            line-height: 1.8;
+            color: #495057;
+            margin-bottom: 15px;
+        }
+
+        .highlight-box {
+            background: #f8f9fa;
+            border-left: 4px solid #2c5282;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .highlight-box.warning {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .highlight-box.tip {
+            border-left-color: #198754;
+            background: #f0fdf4;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .feature-card h4 {
+            color: #2c5282;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .feature-card p {
+            font-size: 0.95rem;
+            color: #6c757d;
+            margin: 0;
+        }
+
+        .example {
+            background: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .example-title {
+            font-weight: 600;
+            color: #2c5282;
+            margin-bottom: 10px;
+        }
+
+        ul, ol {
+            line-height: 1.8;
+            color: #495057;
+            padding-left: 25px;
+        }
+
+        ul li, ol li {
+            margin-bottom: 10px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: #2c5282;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            margin-top: 20px;
+            transition: background 0.2s;
+        }
+
+        .cta-button:hover {
+            background: #1e3a5f;
+        }
+    </style>
+</head>
+<body>
+    <div class="guide-container">
+        <a href="/" class="back-link">← 메인으로 돌아가기</a>
+
+        <div class="guide-header">
+            <h1>투자 타이밍 가이드</h1>
+            <p class="subtitle">
+                과거 데이터를 통해 현재 시장 상황을 이해하고,<br>
+                합리적인 투자 의사결정을 내리는 데 도움을 드립니다.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>📊 서비스 소개</h2>
+            <p>
+                투자 타이밍 가이드는 주요 ETF(QQQ, VOO, SOXX)의 과거 하락 패턴을 분석하여,
+                현재와 유사한 상황에서 시장이 어떻게 움직였는지 보여주는 데이터 분석 서비스입니다.
+            </p>
+            <p>
+                약 15년간의 실제 시장 데이터를 바탕으로, 특정 하락률에서 투자했을 때
+                1개월, 3개월, 6개월, 12개월, 24개월 후의 평균 수익률을 확인할 수 있습니다.
+            </p>
+
+            <div class="highlight-box tip">
+                <strong>💡 핵심 가치</strong>
+                <p style="margin-top: 10px; margin-bottom: 0;">
+                    감정이 아닌 데이터를 기반으로 한 투자 판단. 과거가 미래를 보장하지는 않지만,
+                    패턴을 이해하면 더 나은 의사결정을 할 수 있습니다.
+                </p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 주요 기능</h2>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>1. 현재 상태 분석</h4>
+                    <p>선택한 ETF의 현재 가격과 고점 대비 하락률을 실시간으로 확인합니다.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>2. 과거 유사 사례</h4>
+                    <p>현재와 비슷한 하락률을 기록했던 과거 사례들과 그 이후의 수익률을 분석합니다.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>3. 시나리오별 분석</h4>
+                    <p>-10%, -15%, -20% 등 고정 하락률별로 과거 평균 수익률을 확인합니다.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>4. 시각화 차트</h4>
+                    <p>가격 변동을 차트로 직관적으로 확인하고, 고점과 저점을 명확히 파악합니다.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📖 데이터 해석 방법</h2>
+
+            <h3>1. 현재 상태 섹션</h3>
+            <p>
+                선택한 ETF의 현재가, 역대 최고가, 그리고 고점 대비 하락률을 보여줍니다.
+                1년간의 가격 추이를 차트로 확인하여 최근 흐름을 파악할 수 있습니다.
+            </p>
+
+            <div class="example">
+                <div class="example-title">예시 해석</div>
+                <p>
+                    현재가 $500, 최고가 $625, 하락률 -20%라면:<br>
+                    → 현재 주가가 역대 최고가 대비 20% 낮은 수준에 있다는 의미입니다.
+                </p>
+            </div>
+
+            <h3>2. 과거 유사 하락 사례</h3>
+            <p>
+                현재 하락률의 ±2.5% 범위 내에 있었던 과거 사례들을 보여줍니다.
+                각 사례마다 하락이 시작된 날짜, 저점에 도달한 날짜, 그리고 저점에서 투자했을 때의
+                기간별 수익률을 확인할 수 있습니다.
+            </p>
+
+            <div class="highlight-box">
+                <strong>💡 활용 팁</strong>
+                <ul style="margin-top: 10px; margin-bottom: 0;">
+                    <li>하락 기간의 길이를 확인하세요 (예: 7개월 16일)</li>
+                    <li>여러 사례의 평균적인 패턴을 파악하세요</li>
+                    <li>손실을 기록한 경우도 함께 확인하세요</li>
+                </ul>
+            </div>
+
+            <h3>3. 시나리오별 분석</h3>
+            <p>
+                "만약 -20% 하락한다면?" 같은 시나리오를 미리 확인할 수 있습니다.
+                각 하락률 카드를 클릭하면 해당 수준의 모든 과거 사례를 상세히 볼 수 있습니다.
+            </p>
+
+            <div class="example">
+                <div class="example-title">손실 건수 해석</div>
+                <p>
+                    "1개월 후: +2.5% (손실: 3/10건)"의 의미:<br>
+                    → 과거 10번의 사례 중 평균 수익률은 +2.5%였지만,<br>
+                    → 10번 중 3번은 손실을 기록했다는 의미입니다.
+                </p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>💼 실전 활용 예시</h2>
+
+            <h3>시나리오 1: 추가 매수 타이밍 판단</h3>
+            <p>
+                보유 중인 QQQ가 -15% 하락했다면:
+            </p>
+            <ol>
+                <li>QQQ를 선택하고 현재 하락률 확인</li>
+                <li>"과거 유사 하락 사례"에서 -15% 전후의 사례들 분석</li>
+                <li>평균 회복 기간과 수익률 패턴 확인</li>
+                <li>손실 건수를 보며 리스크 평가</li>
+                <li>데이터를 참고하여 추가 매수 여부 결정</li>
+            </ol>
+
+            <h3>시나리오 2: 분할 매수 전략 수립</h3>
+            <p>
+                시나리오별 분석을 활용한 단계적 매수:
+            </p>
+            <ol>
+                <li>-10%, -15%, -20% 각 수준의 과거 수익률 확인</li>
+                <li>각 하락률에서의 손실 확률과 평균 수익률 비교</li>
+                <li>리스크 대비 수익률이 좋은 구간을 파악</li>
+                <li>각 하락률에 도달할 때마다 분할 매수하는 전략 수립</li>
+            </ol>
+
+            <h3>시나리오 3: 보유 자산 점검</h3>
+            <p>
+                현재 보유 중인 ETF의 위치 파악:
+            </p>
+            <ol>
+                <li>1년 차트에서 현재 위치가 고점/저점 대비 어디인지 확인</li>
+                <li>유사한 하락률에서 평균적으로 얼마나 회복했는지 확인</li>
+                <li>손절 vs 보유 결정에 객관적 데이터 활용</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h2>⚠️ 중요한 주의사항</h2>
+
+            <div class="highlight-box warning">
+                <strong>🚨 필독 사항</strong>
+                <ul style="margin-top: 10px; margin-bottom: 0;">
+                    <li><strong>과거 데이터는 미래를 보장하지 않습니다.</strong> 이 서비스는 참고 자료일 뿐, 투자 조언이 아닙니다.</li>
+                    <li><strong>모든 투자는 본인의 판단과 책임</strong>하에 이루어져야 합니다.</li>
+                    <li><strong>시장 환경은 계속 변화합니다.</strong> 과거와 다른 패턴이 나올 수 있습니다.</li>
+                    <li><strong>손실 가능성을 항상 고려하세요.</strong> 손실 건수 지표를 반드시 확인하세요.</li>
+                    <li><strong>분산 투자와 리스크 관리가 중요합니다.</strong> 한 종목에 집중 투자하지 마세요.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔍 데이터 소스 및 업데이트</h2>
+            <p>
+                본 서비스는 약 15년간의 과거 시장 데이터를 사용합니다.
+                데이터는 매일 자동으로 업데이트되어 최신 정보를 제공합니다.
+            </p>
+            <p>
+                분석 대상 ETF:
+            </p>
+            <ul>
+                <li><strong>QQQ</strong> - Nasdaq-100 지수 추종</li>
+                <li><strong>VOO</strong> - S&P 500 지수 추종</li>
+                <li><strong>SOXX</strong> - 반도체 섹터 지수 추종</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>💡 현명한 투자를 위한 팁</h2>
+            <div class="highlight-box tip">
+                <ol style="margin: 10px 0 0 0;">
+                    <li><strong>감정적 판단을 피하세요.</strong> 공포와 탐욕이 아닌 데이터를 보세요.</li>
+                    <li><strong>평균을 보세요.</strong> 한 두 가지 사례가 아닌 여러 사례의 평균 패턴을 참고하세요.</li>
+                    <li><strong>리스크를 이해하세요.</strong> 높은 수익률 뒤에는 높은 리스크가 있을 수 있습니다.</li>
+                    <li><strong>장기적 관점을 유지하세요.</strong> 24개월 수익률까지 확인하며 장기 투자를 고려하세요.</li>
+                    <li><strong>자신만의 투자 원칙을 세우세요.</strong> 데이터를 참고하되, 자신의 상황에 맞게 판단하세요.</li>
+                </ol>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 60px; padding: 40px 0; border-top: 2px solid #e2e8f0;">
+            <p style="color: #718096; margin-bottom: 20px;">
+                데이터 기반의 합리적인 투자 의사결정을 시작하세요.
+            </p>
+            <a href="/" class="cta-button">서비스 사용하기</a>
+        </div>
+    </div>
+</body>
+</html>
