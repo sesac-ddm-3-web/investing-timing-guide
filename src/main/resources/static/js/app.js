@@ -425,7 +425,7 @@ function showDetailView(level, ticker, pushState = true) {
 
                 ${histCase.chartData ? `
                     <div class="detail-chart-container">
-                        <canvas id="${chartId}" width="800" height="200"></canvas>
+                        <canvas id="${chartId}" width="800" height="400"></canvas>
                     </div>
                 ` : ''}
 
@@ -528,39 +528,97 @@ function createDetailChart(canvasId, historicalDrawdown) {
         return null;
     });
 
+    // Calculate recovery period points (1, 3, 6, 12, 24 months after bottom)
+    const recoveryPoints = {};
+    const recoveryMonths = [1, 3, 6, 12, 24];
+    const bottomDateObj = new Date(bottomDate);
+
+    recoveryMonths.forEach(months => {
+        const targetDate = new Date(bottomDateObj);
+        targetDate.setMonth(targetDate.getMonth() + months);
+
+        // Find closest date in labels
+        let closestIndex = -1;
+        let minDiff = Infinity;
+        labels.forEach((label, index) => {
+            if (index >= bottomIndex) {
+                const labelDate = new Date(label);
+                const diff = Math.abs(labelDate - targetDate);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestIndex = index;
+                }
+            }
+        });
+
+        if (closestIndex >= 0) {
+            recoveryPoints[months] = labels.map((label, index) => {
+                return index === closestIndex ? prices[index] : null;
+            });
+        }
+    });
+
+    // Prepare datasets
+    const datasets = [
+        {
+            label: '가격',
+            data: prices,
+            borderColor: '#6c757d',
+            backgroundColor: 'rgba(108, 117, 125, 0.05)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.1,
+            pointRadius: 0,
+            pointHoverRadius: 4
+        },
+        {
+            label: '고점',
+            data: peakPointData,
+            type: 'scatter',
+            backgroundColor: '#198754',
+            pointRadius: 6,
+            pointHoverRadius: 8
+        },
+        {
+            label: '저점',
+            data: bottomPointData,
+            type: 'scatter',
+            backgroundColor: '#dc3545',
+            pointRadius: 6,
+            pointHoverRadius: 8
+        }
+    ];
+
+    // Add recovery period markers
+    const recoveryColors = {
+        1: '#ffc107',   // amber
+        3: '#ff9800',   // orange
+        6: '#ff5722',   // deep orange
+        12: '#9c27b0',  // purple
+        24: '#3f51b5'   // indigo
+    };
+
+    recoveryMonths.forEach(months => {
+        if (recoveryPoints[months]) {
+            datasets.push({
+                label: `+${months}개월`,
+                data: recoveryPoints[months],
+                type: 'scatter',
+                backgroundColor: recoveryColors[months],
+                borderColor: recoveryColors[months],
+                borderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                showLine: false
+            });
+        }
+    });
+
     new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
-            datasets: [
-                {
-                    label: '가격',
-                    data: prices,
-                    borderColor: '#6c757d',
-                    backgroundColor: 'rgba(108, 117, 125, 0.05)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.1,
-                    pointRadius: 0,
-                    pointHoverRadius: 4
-                },
-                {
-                    label: '고점',
-                    data: peakPointData,
-                    type: 'scatter',
-                    backgroundColor: '#198754',
-                    pointRadius: 6,
-                    pointHoverRadius: 8
-                },
-                {
-                    label: '저점',
-                    data: bottomPointData,
-                    type: 'scatter',
-                    backgroundColor: '#dc3545',
-                    pointRadius: 6,
-                    pointHoverRadius: 8
-                }
-            ]
+            datasets: datasets
         },
         options: {
             responsive: true,
@@ -797,55 +855,114 @@ function createHistoricalDrawdownChart(chartId, historicalDrawdown) {
         return null;
     });
 
+    // Calculate recovery period points (1, 3, 6, 12, 24 months after bottom)
+    const recoveryPoints = {};
+    const recoveryMonths = [1, 3, 6, 12, 24];
+    const bottomDateObj = new Date(bottomDate);
+
+    recoveryMonths.forEach(months => {
+        const targetDate = new Date(bottomDateObj);
+        targetDate.setMonth(targetDate.getMonth() + months);
+        const targetDateStr = targetDate.toISOString().split('T')[0];
+
+        // Find closest date in labels
+        let closestIndex = -1;
+        let minDiff = Infinity;
+        labels.forEach((label, index) => {
+            if (index >= bottomIndex) {
+                const labelDate = new Date(label);
+                const diff = Math.abs(labelDate - targetDate);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestIndex = index;
+                }
+            }
+        });
+
+        if (closestIndex >= 0) {
+            recoveryPoints[months] = labels.map((label, index) => {
+                return index === closestIndex ? prices[index] : null;
+            });
+        }
+    });
+
+    // Prepare datasets
+    const datasets = [
+        {
+            label: '가격',
+            data: prices,
+            borderColor: '#6c757d',
+            backgroundColor: 'rgba(108, 117, 125, 0.08)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.1,
+            pointRadius: 0,
+            pointHoverRadius: 4
+        },
+        {
+            label: `고점 ($${peakPrice.toFixed(2)})`,
+            data: peakLineData,
+            borderColor: '#198754',
+            borderWidth: 1,
+            borderDash: [3, 3],
+            fill: false,
+            pointRadius: 0,
+            pointHoverRadius: 0
+        },
+        {
+            label: '고점 시점',
+            data: peakPointData,
+            type: 'scatter',
+            backgroundColor: '#198754',
+            borderColor: '#198754',
+            borderWidth: 2,
+            pointRadius: 7,
+            pointHoverRadius: 9,
+            showLine: false
+        },
+        {
+            label: '저점 시점',
+            data: bottomPointData,
+            type: 'scatter',
+            backgroundColor: '#dc3545',
+            borderColor: '#dc3545',
+            borderWidth: 2,
+            pointRadius: 7,
+            pointHoverRadius: 9,
+            showLine: false
+        }
+    ];
+
+    // Add recovery period markers
+    const recoveryColors = {
+        1: '#ffc107',   // amber
+        3: '#ff9800',   // orange
+        6: '#ff5722',   // deep orange
+        12: '#9c27b0',  // purple
+        24: '#3f51b5'   // indigo
+    };
+
+    recoveryMonths.forEach(months => {
+        if (recoveryPoints[months]) {
+            datasets.push({
+                label: `+${months}개월`,
+                data: recoveryPoints[months],
+                type: 'scatter',
+                backgroundColor: recoveryColors[months],
+                borderColor: recoveryColors[months],
+                borderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                showLine: false
+            });
+        }
+    });
+
     new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
-            datasets: [
-                {
-                    label: '가격',
-                    data: prices,
-                    borderColor: '#6c757d',
-                    backgroundColor: 'rgba(108, 117, 125, 0.08)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.1,
-                    pointRadius: 0,
-                    pointHoverRadius: 4
-                },
-                {
-                    label: `고점 ($${peakPrice.toFixed(2)})`,
-                    data: peakLineData,
-                    borderColor: '#198754',
-                    borderWidth: 1,
-                    borderDash: [3, 3],
-                    fill: false,
-                    pointRadius: 0,
-                    pointHoverRadius: 0
-                },
-                {
-                    label: '고점 시점',
-                    data: peakPointData,
-                    type: 'scatter',
-                    backgroundColor: '#198754',
-                    borderColor: '#198754',
-                    borderWidth: 2,
-                    pointRadius: 7,
-                    pointHoverRadius: 9,
-                    showLine: false
-                },
-                {
-                    label: '저점 시점',
-                    data: bottomPointData,
-                    type: 'scatter',
-                    backgroundColor: '#dc3545',
-                    borderColor: '#dc3545',
-                    borderWidth: 2,
-                    pointRadius: 7,
-                    pointHoverRadius: 9,
-                    showLine: false
-                }
-            ]
+            datasets: datasets
         },
         options: {
             responsive: true,
