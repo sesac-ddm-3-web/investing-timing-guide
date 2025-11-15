@@ -102,6 +102,18 @@ public class AnalysisService {
 
             if (bottomData == null) continue;
 
+            // Check if there's any price higher than peak between peak and bottom
+            // If so, this is not a valid drawdown pattern
+            boolean hasHigherPrice = false;
+            for (int j = i + 1; j < bottomIndex; j++) {
+                if (stockDataList.get(j).getClose().compareTo(peakPrice) > 0) {
+                    hasHigherPrice = true;
+                    break;
+                }
+            }
+
+            if (hasHigherPrice) continue;
+
             // Calculate drawdown from this peak
             BigDecimal drawdown = bottomData.getClose().subtract(peakPrice)
                 .divide(peakPrice, 4, RoundingMode.HALF_UP)

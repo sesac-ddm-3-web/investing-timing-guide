@@ -2,9 +2,6 @@ const API_BASE_URL = '/api/stocks';
 
 // DOM Elements
 const tickerSelect = document.getElementById('ticker-select');
-const analyzeBtn = document.getElementById('analyze-btn');
-const refreshBtn = document.getElementById('refresh-btn');
-const analyzeAllBtn = document.getElementById('analyze-all-btn');
 const loading = document.getElementById('loading');
 const errorMessage = document.getElementById('error-message');
 const results = document.getElementById('results');
@@ -13,20 +10,6 @@ const results = document.getElementById('results');
 tickerSelect.addEventListener('change', () => {
     const ticker = tickerSelect.value;
     analyzeStock(ticker);
-});
-
-analyzeBtn.addEventListener('click', () => {
-    const ticker = tickerSelect.value;
-    analyzeStock(ticker);
-});
-
-refreshBtn.addEventListener('click', () => {
-    const ticker = tickerSelect.value;
-    refreshStockData(ticker);
-});
-
-analyzeAllBtn.addEventListener('click', () => {
-    analyzeAllStocks();
 });
 
 // Show/Hide UI elements
@@ -62,37 +45,6 @@ async function analyzeStock(ticker) {
     }
 }
 
-async function refreshStockData(ticker) {
-    showLoading();
-    try {
-        const response = await fetch(`${API_BASE_URL}/${ticker}/refresh?years=10`, {
-            method: 'POST'
-        });
-        if (!response.ok) {
-            throw new Error('데이터 새로고침에 실패했습니다');
-        }
-        hideLoading();
-        // After refresh, analyze the stock
-        analyzeStock(ticker);
-    } catch (error) {
-        showError(error.message);
-    }
-}
-
-async function analyzeAllStocks() {
-    showLoading();
-    try {
-        const response = await fetch(`${API_BASE_URL}/analysis/all?years=10`);
-        if (!response.ok) {
-            throw new Error('데이터를 가져오는데 실패했습니다');
-        }
-        const data = await response.json();
-        hideLoading();
-        displayAllAnalysis(data);
-    } catch (error) {
-        showError(error.message);
-    }
-}
 
 // Display Functions
 function displayStockAnalysis(ticker, data) {
@@ -118,17 +70,6 @@ function displayStockAnalysis(ticker, data) {
     results.appendChild(card);
 }
 
-function displayAllAnalysis(allData) {
-    results.innerHTML = '';
-
-    Object.keys(allData).forEach(ticker => {
-        const data = allData[ticker];
-        if (data.currentDrawdown) {
-            const card = createStockCard(ticker, data);
-            results.appendChild(card);
-        }
-    });
-}
 
 function createStockCard(ticker, data) {
     const card = document.createElement('div');
@@ -385,8 +326,8 @@ function createPriceChart(ticker, chartData, drawdown) {
                 {
                     label: 'Price',
                     data: prices,
-                    borderColor: '#4299e1',
-                    backgroundColor: 'rgba(66, 153, 225, 0.1)',
+                    borderColor: '#2c5282',
+                    backgroundColor: 'rgba(44, 82, 130, 0.08)',
                     borderWidth: 2,
                     fill: true,
                     tension: 0.1,
@@ -396,8 +337,8 @@ function createPriceChart(ticker, chartData, drawdown) {
                 {
                     label: `Peak ($${peakPrice.toFixed(2)})`,
                     data: peakLineData,
-                    borderColor: '#48bb78',
-                    borderWidth: 2,
+                    borderColor: '#198754',
+                    borderWidth: 1.5,
                     borderDash: [5, 5],
                     fill: false,
                     pointRadius: 0,
@@ -523,8 +464,8 @@ function createHistoricalDrawdownChart(chartId, historicalDrawdown) {
                 {
                     label: '가격',
                     data: prices,
-                    borderColor: '#ed8936',
-                    backgroundColor: 'rgba(237, 137, 54, 0.1)',
+                    borderColor: '#6c757d',
+                    backgroundColor: 'rgba(108, 117, 125, 0.08)',
                     borderWidth: 2,
                     fill: true,
                     tension: 0.1,
@@ -534,7 +475,7 @@ function createHistoricalDrawdownChart(chartId, historicalDrawdown) {
                 {
                     label: `고점 ($${peakPrice.toFixed(2)})`,
                     data: peakLineData,
-                    borderColor: '#48bb78',
+                    borderColor: '#198754',
                     borderWidth: 1,
                     borderDash: [3, 3],
                     fill: false,
@@ -545,22 +486,22 @@ function createHistoricalDrawdownChart(chartId, historicalDrawdown) {
                     label: '고점 시점',
                     data: peakPointData,
                     type: 'scatter',
-                    backgroundColor: '#48bb78',
-                    borderColor: '#48bb78',
+                    backgroundColor: '#198754',
+                    borderColor: '#198754',
                     borderWidth: 2,
-                    pointRadius: 8,
-                    pointHoverRadius: 10,
+                    pointRadius: 7,
+                    pointHoverRadius: 9,
                     showLine: false
                 },
                 {
                     label: '저점 시점',
                     data: bottomPointData,
                     type: 'scatter',
-                    backgroundColor: '#f56565',
-                    borderColor: '#f56565',
+                    backgroundColor: '#dc3545',
+                    borderColor: '#dc3545',
                     borderWidth: 2,
-                    pointRadius: 8,
-                    pointHoverRadius: 10,
+                    pointRadius: 7,
+                    pointHoverRadius: 9,
                     showLine: false
                 }
             ]
