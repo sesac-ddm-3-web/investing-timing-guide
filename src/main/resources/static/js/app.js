@@ -6,10 +6,75 @@ const loading = document.getElementById('loading');
 const errorMessage = document.getElementById('error-message');
 const results = document.getElementById('results');
 
+// Store current data for navigation
+let currentAnalysisData = null;
+let currentTicker = null;
+
 // Event Listeners
 tickerSelect.addEventListener('change', () => {
     const ticker = tickerSelect.value;
+    // Update URL and analyze
+    const url = new URL(window.location);
+    url.searchParams.set('ticker', ticker);
+    url.searchParams.delete('level'); // Remove level param when changing ticker
+    window.history.pushState({ ticker }, '', url);
     analyzeStock(ticker);
+});
+
+// Handle browser back/forward buttons
+window.addEventListener('popstate', (event) => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const ticker = urlParams.get('ticker') || 'QQQ';
+    const level = urlParams.get('level');
+
+    // Update ticker selector
+    if (tickerSelect.value !== ticker) {
+        tickerSelect.value = ticker;
+        analyzeStock(ticker);
+    } else if (level && currentAnalysisData) {
+        // Show detail view for the level
+        const levelData = currentAnalysisData.drawdownLevelAnalyses?.find(
+            l => l.drawdownLevel === parseInt(level)
+        );
+        if (levelData) {
+            showDetailView(levelData, ticker, false); // false = don't push state
+        }
+    } else {
+        // Show main view
+        hideDetailView(false); // false = don't push state
+    }
+});
+
+// Load from URL on page load
+window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const ticker = urlParams.get('ticker') || tickerSelect.value;
+    const level = urlParams.get('level');
+
+    // Set ticker selector
+    tickerSelect.value = ticker;
+
+    // Set initial URL if not present
+    if (!urlParams.get('ticker')) {
+        const url = new URL(window.location);
+        url.searchParams.set('ticker', ticker);
+        window.history.replaceState({ ticker }, '', url);
+    }
+
+    // Analyze stock
+    analyzeStock(ticker).then(() => {
+        // If level param exists, show detail view
+        if (level && currentAnalysisData) {
+            const levelData = currentAnalysisData.drawdownLevelAnalyses?.find(
+                l => l.drawdownLevel === parseInt(level)
+            );
+            if (levelData) {
+                setTimeout(() => {
+                    showDetailView(levelData, ticker, false); // false = don't modify history
+                }, 100);
+            }
+        }
+    });
 });
 
 // Show/Hide UI elements
@@ -38,10 +103,17 @@ async function analyzeStock(ticker) {
             throw new Error('데이터를 가져오는데 실패했습니다');
         }
         const data = await response.json();
+
+        // Store data for navigation
+        currentAnalysisData = data;
+        currentTicker = ticker;
+
         hideLoading();
         displayStockAnalysis(ticker, data);
+        return data;
     } catch (error) {
         showError(error.message);
+        throw error;
     }
 }
 
@@ -310,8 +382,16 @@ function attachLevelClickListeners(drawdownLevels, ticker) {
     });
 }
 
-function showDetailView(level, ticker) {
+function showDetailView(level, ticker, pushState = true) {
     const results = document.getElementById('results');
+
+    // Update URL if needed
+    if (pushState) {
+        const url = new URL(window.location);
+        url.searchParams.set('ticker', ticker);
+        url.searchParams.set('level', level.drawdownLevel);
+        window.history.pushState({ ticker, level: level.drawdownLevel }, '', url);
+    }
 
     // Hide main content
     const mainContent = results.querySelector('.stock-card');
@@ -391,10 +471,17 @@ function showDetailView(level, ticker) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function hideDetailView() {
+function hideDetailView(pushState = true) {
     const results = document.getElementById('results');
     const detailView = results.querySelector('.detail-view');
     const mainContent = results.querySelector('.stock-card');
+
+    // Update URL if needed
+    if (pushState) {
+        const url = new URL(window.location);
+        url.searchParams.delete('level');
+        window.history.pushState({ ticker: currentTicker }, '', url);
+    }
 
     if (detailView) {
         detailView.remove();
