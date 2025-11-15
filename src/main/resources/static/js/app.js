@@ -411,11 +411,12 @@ function showDetailView(level, ticker, pushState = true) {
 
     const caseItems = level.historicalCases.map((histCase, index) => {
         const chartId = `detail-chart-${ticker}-${index}`;
+        const duration = calculateDuration(histCase.startDate, histCase.bottomDate);
         return `
             <div class="detail-case-item">
                 <div class="detail-case-header">
                     <div class="detail-case-date">
-                        ${histCase.startDate} → ${histCase.bottomDate}
+                        ${histCase.startDate} → ${histCase.bottomDate} (${duration})
                     </div>
                     <div class="detail-case-drawdown ${histCase.drawdownPercent >= 0 ? 'positive' : 'negative'}">
                         하락률: ${formatPercent(histCase.drawdownPercent)}
@@ -609,6 +610,37 @@ function formatPercent(num) {
     const value = Number(num);
     const sign = value >= 0 ? '+' : '';
     return `${sign}${value.toFixed(2)}%`;
+}
+
+function calculateDuration(startDateStr, endDateStr) {
+    const startDate = new Date(startDateStr);
+    const endDate = new Date(endDateStr);
+
+    let years = endDate.getFullYear() - startDate.getFullYear();
+    let months = endDate.getMonth() - startDate.getMonth();
+    let days = endDate.getDate() - startDate.getDate();
+
+    // Adjust for negative days
+    if (days < 0) {
+        months--;
+        // Get days in previous month
+        const prevMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 0);
+        days += prevMonth.getDate();
+    }
+
+    // Adjust for negative months
+    if (months < 0) {
+        years--;
+        months += 12;
+    }
+
+    // Format the result
+    const parts = [];
+    if (years > 0) parts.push(`${years}년`);
+    if (months > 0) parts.push(`${months}개월`);
+    if (days > 0) parts.push(`${days}일`);
+
+    return parts.length > 0 ? parts.join(' ') : '0일';
 }
 
 // Chart Functions
