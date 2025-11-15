@@ -216,9 +216,9 @@ public class AnalysisService {
      * Analyze historical performance at a specific drawdown level
      */
     private DrawdownLevelAnalysis analyzeDrawdownLevel(List<StockData> stockDataList, int drawdownLevel) {
-        // Find all historical instances where drawdown was approximately this level (±1%)
+        // Find all historical instances where drawdown was approximately this level (±2.5%)
         BigDecimal targetDrawdown = BigDecimal.valueOf(drawdownLevel);
-        BigDecimal tolerance = BigDecimal.valueOf(1.0);
+        BigDecimal tolerance = BigDecimal.valueOf(2.5);
 
         List<HistoricalDrawdown> historicalCases = findHistoricalDrawdowns(
             stockDataList,
@@ -413,11 +413,11 @@ public class AnalysisService {
             // Calculate current drawdown
             DrawdownAnalysis currentDrawdown = calculateCurrentDrawdown(ticker, stockDataList);
 
-            // Find similar historical drawdowns (within 2% tolerance)
+            // Find similar historical drawdowns (within 2.5% tolerance)
             List<HistoricalDrawdown> historicalDrawdowns = findHistoricalDrawdowns(
                 stockDataList,
                 currentDrawdown.getDrawdownPercent(),
-                BigDecimal.valueOf(2.0)
+                BigDecimal.valueOf(2.5)
             );
 
             // Analyze fixed drawdown levels (10%, 15%, 20%, etc.)

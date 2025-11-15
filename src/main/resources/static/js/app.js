@@ -121,7 +121,7 @@ function createStockCard(ticker, data) {
         </div>
 
         ${createHistoricalSection(historicals, drawdown.drawdownPercent, ticker)}
-        ${createDrawdownLevelsSection(drawdownLevels)}
+        ${createDrawdownLevelsSection(drawdownLevels, ticker)}
     `;
 
     // Draw chart after card is added to DOM
@@ -205,15 +205,15 @@ function createHistoricalSection(historicals, currentDrawdown, ticker) {
     `;
 }
 
-function createDrawdownLevelsSection(drawdownLevels) {
+function createDrawdownLevelsSection(drawdownLevels, ticker) {
     if (!drawdownLevels || drawdownLevels.length === 0) {
         return '';
     }
 
-    const levelItems = drawdownLevels.map(level => {
+    const levelItems = drawdownLevels.map((level, index) => {
         if (!level.averageStats || level.totalCases === 0) {
             return `
-                <div class="level-item">
+                <div class="level-item" style="cursor: default; pointer-events: none;">
                     <div class="level-header">
                         <h4>${level.drawdownLevel}% 하락 시</h4>
                         <span class="case-count">과거 사례: 0건</span>
@@ -224,8 +224,9 @@ function createDrawdownLevelsSection(drawdownLevels) {
         }
 
         const stats = level.averageStats;
+
         return `
-            <div class="level-item">
+            <div class="level-item" data-level-index="${index}">
                 <div class="level-header">
                     <h4>${level.drawdownLevel}% 하락 시</h4>
                     <span class="case-count">과거 사례: ${level.totalCases}건</span>
@@ -276,6 +277,11 @@ function createDrawdownLevelsSection(drawdownLevels) {
         `;
     }).join('');
 
+    // Add event listeners after rendering
+    setTimeout(() => {
+        attachLevelClickListeners(drawdownLevels, ticker);
+    }, 100);
+
     return `
         <div class="drawdown-levels-section">
             <h3>시나리오별 분석 - 고정 하락률 기준</h3>
@@ -287,6 +293,222 @@ function createDrawdownLevelsSection(drawdownLevels) {
             </div>
         </div>
     `;
+}
+
+function attachLevelClickListeners(drawdownLevels, ticker) {
+    const levelItems = document.querySelectorAll('.level-item[data-level-index]');
+
+    levelItems.forEach((item, index) => {
+        const level = drawdownLevels[index];
+        if (!level || !level.historicalCases || level.historicalCases.length === 0) {
+            return;
+        }
+
+        item.addEventListener('click', () => {
+            showDetailView(level, ticker);
+        });
+    });
+}
+
+function showDetailView(level, ticker) {
+    const results = document.getElementById('results');
+
+    // Hide main content
+    const mainContent = results.querySelector('.stock-card');
+    if (mainContent) {
+        mainContent.style.display = 'none';
+    }
+
+    // Remove existing detail view if any
+    const existingDetail = results.querySelector('.detail-view');
+    if (existingDetail) {
+        existingDetail.remove();
+    }
+
+    // Create detail view
+    const detailView = document.createElement('div');
+    detailView.className = 'detail-view show';
+
+    const caseItems = level.historicalCases.map((histCase, index) => {
+        const chartId = `detail-chart-${ticker}-${index}`;
+        return `
+            <div class="detail-case-item">
+                <div class="detail-case-header">
+                    <div class="detail-case-date">
+                        ${histCase.startDate} → ${histCase.bottomDate}
+                    </div>
+                    <div class="detail-case-drawdown ${histCase.drawdownPercent >= 0 ? 'positive' : 'negative'}">
+                        하락률: ${formatPercent(histCase.drawdownPercent)}
+                    </div>
+                </div>
+
+                ${histCase.chartData ? `
+                    <div class="detail-chart-container">
+                        <canvas id="${chartId}" width="800" height="200"></canvas>
+                    </div>
+                ` : ''}
+
+                <div class="detail-recovery-section">
+                    <div class="detail-recovery-title">해당 저점에서 투자 시 수익률</div>
+                    <div class="recovery-grid">
+                        ${histCase.recoveryPeriods.map(period => `
+                            <div class="recovery-item">
+                                <div class="recovery-months">${period.months}개월 후</div>
+                                <div class="recovery-return ${period.returnPercent >= 0 ? 'positive' : 'negative'}">
+                                    ${formatPercent(period.returnPercent)}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    detailView.innerHTML = `
+        <div class="detail-header">
+            <h2 class="detail-title">${ticker} - ${level.drawdownLevel}% 하락 시 과거 사례 (총 ${level.totalCases}건)</h2>
+            <button class="back-button" onclick="hideDetailView()">← 돌아가기</button>
+        </div>
+        <div class="detail-cases">
+            ${caseItems}
+        </div>
+    `;
+
+    results.appendChild(detailView);
+
+    // Draw charts
+    setTimeout(() => {
+        level.historicalCases.forEach((histCase, index) => {
+            if (histCase.chartData) {
+                const chartId = `detail-chart-${ticker}-${index}`;
+                createDetailChart(chartId, histCase);
+            }
+        });
+    }, 100);
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function hideDetailView() {
+    const results = document.getElementById('results');
+    const detailView = results.querySelector('.detail-view');
+    const mainContent = results.querySelector('.stock-card');
+
+    if (detailView) {
+        detailView.remove();
+    }
+
+    if (mainContent) {
+        mainContent.style.display = 'block';
+    }
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function createDetailChart(canvasId, historicalDrawdown) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const chartData = historicalDrawdown.chartData;
+
+    if (!chartData || !chartData.labels || !chartData.prices) {
+        return;
+    }
+
+    const labels = chartData.labels;
+    const prices = chartData.prices.map(p => parseFloat(p));
+    const peakPrice = parseFloat(chartData.peakPrice);
+    const peakDate = chartData.peakDate;
+    const bottomDate = historicalDrawdown.bottomDate;
+
+    // Find indices for peak and bottom
+    const peakIndex = labels.indexOf(peakDate);
+    const bottomIndex = labels.indexOf(bottomDate);
+
+    // Create scatter data for peak and bottom points
+    const peakPointData = labels.map((label, index) => {
+        if (index === peakIndex) return prices[index];
+        return null;
+    });
+
+    const bottomPointData = labels.map((label, index) => {
+        if (index === bottomIndex) return prices[index];
+        return null;
+    });
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '가격',
+                    data: prices,
+                    borderColor: '#6c757d',
+                    backgroundColor: 'rgba(108, 117, 125, 0.05)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.1,
+                    pointRadius: 0,
+                    pointHoverRadius: 4
+                },
+                {
+                    label: '고점',
+                    data: peakPointData,
+                    type: 'scatter',
+                    backgroundColor: '#198754',
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                },
+                {
+                    label: '저점',
+                    data: bottomPointData,
+                    type: 'scatter',
+                    backgroundColor: '#dc3545',
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45,
+                        font: {
+                            size: 10
+                        }
+                    }
+                },
+                y: {
+                    display: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toFixed(2);
+                        }
+                    }
+                }
+            }
+        }
+    });
 }
 
 // Utility Functions

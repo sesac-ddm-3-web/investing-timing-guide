@@ -384,3 +384,125 @@ h1 {
     max-width: 100%;
     height: auto;
 }
+
+/* Clickable Level Cards */
+.level-item {
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.level-item:hover {
+    transform: translateY(-2px);
+}
+
+.level-item[data-level-index]::after {
+    content: "클릭하여 상세보기 →";
+    display: block;
+    text-align: center;
+    font-size: 0.85rem;
+    color: #2c5282;
+    margin-top: 12px;
+    font-weight: 500;
+}
+
+/* Detail View */
+.detail-view {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.detail-view.show {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.back-button {
+    padding: 8px 16px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #495057;
+    transition: all 0.2s;
+}
+
+.back-button:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.detail-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.detail-cases {
+    display: grid;
+    gap: 20px;
+}
+
+.detail-case-item {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.detail-case-header {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.detail-case-date {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+}
+
+.detail-case-drawdown {
+    font-size: 0.9rem;
+    color: #718096;
+}
+
+.detail-chart-container {
+    margin: 16px 0;
+    background: white;
+    padding: 16px;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.detail-recovery-section {
+    margin-top: 16px;
+}
+
+.detail-recovery-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 12px;
+}
