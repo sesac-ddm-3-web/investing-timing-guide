@@ -1,6 +1,9 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.InvestingApiResponse;
+import com.example.demo.model.StockData;
+import com.example.demo.repository.JsonDataRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -8,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.*;
+import java.math.BigDecimal;
 import java.nio.file.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -30,6 +34,29 @@ public class DataUpdateService {
     );
 
     private final RestTemplate restTemplate = new RestTemplate();
+    private final JsonDataRepository jsonDataRepository;
+
+    /**
+     * 애플리케이션 시작 시 최신 데이터 확인 및 업데이트
+     */
+    @PostConstruct
+    public void initializeData() {
+        log.info("Application started - checking for data updates");
+        try {
+            // 비동기로 실행하여 애플리케이션 시작을 블로킹하지 않음
+            new Thread(() -> {
+                try {
+                    Thread.sleep(5000); // 애플리케이션이 완전히 시작된 후 실행
+                    updateAllTickersData();
+                } catch (InterruptedException e) {
+                    log.error("Initialization update interrupted", e);
+                    Thread.currentThread().interrupt();
+                }
+            }).start();
+        } catch (Exception e) {
+            log.error("Failed to start initialization update", e);
+        }
+    }
 
     /**
      * 매일 오전 9시에 실행 (한국 시간 기준)
@@ -88,7 +115,10 @@ public class DataUpdateService {
         // CSV 파일에 추가
         appendToCsv(path, response.getData());
 
-        log.info("Successfully updated {} records for {}", response.getData().size(), ticker);
+        // JSON 파일도 업데이트
+        updateJsonFile(ticker, response.getData());
+
+        log.info("Successfully updated {} records for {} (CSV and JSON)", response.getData().size(), ticker);
     }
 
     /**
@@ -148,6 +178,42 @@ public class DataUpdateService {
         }
 
         Files.write(path, lines, StandardOpenOption.APPEND);
+    }
+
+    /**
+     * Investing.com API 데이터를 StockData 리스트로 변환
+     */
+    private List<StockData> convertToStockData(List<InvestingApiResponse.HistoricalDataPoint> dataPoints) {
+        return dataPoints.stream()
+            .map(point -> {
+                // ISO 타임스탬프에서 날짜만 추출 (2025-11-14T00:00:00Z -> 2025-11-14)
+                String dateStr = point.getRowDateTimestamp().substring(0, 10);
+                LocalDate date = LocalDate.parse(dateStr);
+
+                return StockData.builder()
+                    .date(date)
+                    .open(BigDecimal.valueOf(point.getLastOpenRaw()))
+                    .high(BigDecimal.valueOf(point.getLastMaxRaw()))
+                    .low(BigDecimal.valueOf(point.getLastMinRaw()))
+                    .close(BigDecimal.valueOf(point.getLastCloseRaw()))
+                    .volume(point.getVolumeRaw())
+                    .build();
+            })
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * JSON 파일 업데이트
+     */
+    private void updateJsonFile(String ticker, List<InvestingApiResponse.HistoricalDataPoint> dataPoints) {
+        try {
+            List<StockData> newData = convertToStockData(dataPoints);
+            jsonDataRepository.appendStockData(ticker, newData);
+            log.info("Successfully updated JSON file for {}", ticker);
+        } catch (Exception e) {
+            log.error("Failed to update JSON file for {}", ticker, e);
+            // CSV는 이미 업데이트되었으므로 에러만 로깅하고 계속 진행
+        }
     }
 
     /**
