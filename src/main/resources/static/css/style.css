@@ -424,6 +424,10 @@ h1 {
     box-shadow: 0 2px 8px rgba(44, 82, 130, 0.3);
 }
 
+.back-button-container {
+    margin-bottom: 24px;
+}
+
 .back-button {
     padding: 10px 20px;
     background: transparent;
@@ -434,7 +438,6 @@ h1 {
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
-    margin-bottom: 20px;
 }
 
 .back-button:hover {
@@ -805,6 +808,10 @@ h1 {
     .detail-button {
         padding: 12px 20px;
         font-size: 0.95rem;
+    }
+
+    .back-button-container {
+        margin-bottom: 16px;
     }
 
     .back-button {
